@@ -24,6 +24,9 @@ repositories {
 	mavenCentral()
 }
 
+// 환경변수를 사용해 개발환경 or 배포환경 구분
+def activeProfile = System.getenv("SPRING_PROFILES_ACTIVE") ?: "dev"
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -45,13 +48,14 @@ dependencies {
 	implementation 'com.h2database:h2'
 	runtimeOnly 'com.h2database:h2'
 	//runtimeOnly 'mysql:mysql-connector-java:8.0.30'
+	implementation group: 'com.mysql', name: 'mysql-connector-j'
+	implementation 'org.mariadb.jdbc:mariadb-java-client'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
 
-bootJar {
-	archivesBaseName='backend-0.0.1'
-	archiveFileName='backend-0.0.1.jar'
+bootRun {
+	systemProperty("spring.profiles.active", activeProfile)
 }
