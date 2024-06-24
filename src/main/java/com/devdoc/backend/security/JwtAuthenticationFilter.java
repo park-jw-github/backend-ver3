@@ -1,6 +1,8 @@
 package com.devdoc.backend.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,49 +22,37 @@ import java.io.IOException;
 
 // JwtAuthenticationFilter: JWT 토큰을 기반으로 인증 필터를 구현
 
-@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     @Autowired
-    private TokenProvider tokenProvider; // 토큰 제공자
+    private TokenProvider tokenProvider;
 
-    // 필터 실행
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String token = parseBearerToken(request); // 토큰 파싱
-            log.info("Filter is running...");
-
-            if (token != null && !token.equalsIgnoreCase("null")) {
-                String userId = tokenProvider.validateAndGetUserId(token); // 토큰 검증 및 사용자 ID 추출
-                log.info("Authenticated user ID : " + userId );
-
-                // 인증 객체 생성
-                AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userId,
-                        null,
-                        AuthorityUtils.NO_AUTHORITIES
-                );
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); // 인증 객체에 요청 정보 설정
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext(); // 빈 보안 컨텍스트 생성
-                securityContext.setAuthentication(authentication); // 보안 컨텍스트에 인증 객체 설정
-                SecurityContextHolder.setContext(securityContext); // 보안 컨텍스트 설정
-            }
-        } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex); // 예외 처리
-        }
-
-        filterChain.doFilter(request, response); // 다음 필터로 요청 전달
+    public JwtAuthenticationFilter() {
     }
 
-    // 요청 헤더에서 Bearer 토큰 파싱
-    private String parseBearerToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization"); // Authorization 헤더에서 토큰 추출
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // Bearer 접두사 제거 후 토큰 반환
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String token = this.parseBearerToken(request);
+            log.info("Filter is running...");
+            if (token != null && !token.equalsIgnoreCase("null")) {
+                String userId = this.tokenProvider.validateAndGetUserId(token);
+                log.info("Authenticated user ID : " + userId);
+                AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, (Object)null, AuthorityUtils.NO_AUTHORITIES);
+                authentication.setDetails((new WebAuthenticationDetailsSource()).buildDetails(request));
+                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+                securityContext.setAuthentication(authentication);
+                SecurityContextHolder.setContext(securityContext);
+            }
+        } catch (Exception var8) {
+            this.logger.error("Could not set user authentication in security context", var8);
         }
-        return null; // 토큰이 없으면 null 반환
+
+        filterChain.doFilter(request, response);
+    }
+
+    private String parseBearerToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        return StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ") ? bearerToken.substring(7) : null;
     }
 }
