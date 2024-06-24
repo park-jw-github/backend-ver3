@@ -34,7 +34,7 @@ public class WebSecurityConfig {
 				.sessionManagement(sessionManagement ->
 						sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authorize ->
-						authorize.requestMatchers("/", "/auth/**", "/h2-console/**").permitAll()
+						authorize.requestMatchers("/", "/auth/**", "/h2-console/**", "https://devdoc-backend-a9c04f690ebd.herokuapp.com", "https://main.d3oxfc94kz63px.amplifyapp.com").permitAll()
 								.anyRequest().authenticated())
 				.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
