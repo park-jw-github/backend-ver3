@@ -20,7 +20,7 @@ public class TokenProvider {
     private final Key secretKey;
 
     public TokenProvider() {
-        String secret = "your-256-bit-secret"; // 고정된 비밀 키
+        String secret = "fwf9238hf2h9fho23hfi2i3hfi2fh23ifno2hofwef"; // 고정된 비밀 키
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
