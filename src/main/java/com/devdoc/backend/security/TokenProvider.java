@@ -4,14 +4,11 @@ package com.devdoc.backend.security;
 import com.devdoc.backend.model.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,14 +17,11 @@ import java.util.Date;
 @Service
 public class TokenProvider {
     private static final Logger log = LoggerFactory.getLogger(TokenProvider.class);
-    private Key secretKey;
+    private final Key secretKey;
 
     public TokenProvider() {
-    }
-
-    @PostConstruct
-    public void init() {
-        this.secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+        String secret = "your-256-bit-secret"; // 고정된 비밀 키
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String create(UserEntity userEntity) {
@@ -36,7 +30,7 @@ public class TokenProvider {
     }
 
     public String validateAndGetUserId(String token) {
-        Claims claims = (Claims)Jwts.parserBuilder().setSigningKey(this.secretKey).build().parseClaimsJws(token).getBody();
+        Claims claims = Jwts.parserBuilder().setSigningKey(this.secretKey).build().parseClaimsJws(token).getBody();
         return claims.getSubject();
     }
 }
